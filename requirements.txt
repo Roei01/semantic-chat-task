@@ -1,0 +1,14 @@
+selenium
+requests
+langchain
+langchain-community
+langchain-huggingface
+chromadb
+pypdf
+docx2txt
+sentence-transformers
+fastapi
+uvicorn
+pydantic
+openai
+docx2txt>=0.8
