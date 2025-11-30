@@ -43,12 +43,12 @@ async def chat_endpoint(req: ChatRequest):
             
         service = LegalRAGService(chat_model=model)
         stream, citations = service.stream_answer(req.question)
-        
+
         async def generator():
             yield json.dumps({"type": "citations", "data": citations}) + "\n"
-            for token in stream:
-                yield json.dumps({"type": "token", "data": token}) + "\n"
-                
+            for event in stream:
+                yield json.dumps(event) + "\n"
+
         return StreamingResponse(generator(), media_type="application/x-ndjson")
         
     except HTTPException:

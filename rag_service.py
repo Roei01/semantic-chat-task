@@ -92,7 +92,7 @@ class LegalRAGService:
         top_score = scored_docs[0][1]
         filtered_docs = []
         for doc, score in scored_docs:
-            if score >= top_score * 0.3:
+            if score >= top_score * 0.6:
                 filtered_docs.append(doc)
         
         return filtered_docs[:3] if filtered_docs else []
@@ -226,9 +226,7 @@ class LegalRAGService:
                 filtered_sentences.append(sent_clean)
         
         answer = ". ".join(filtered_sentences)
-        if answer and not answer.endswith("."):
-            answer += "."
-        
+
         return answer.strip()
         
     def answer(self, question: str) -> Tuple[str, List[Dict]]:
@@ -240,23 +238,20 @@ class LegalRAGService:
         answer = self._clean_answer(answer)
         return answer, citations
         
-    def stream_answer(self, question: str) -> Tuple[Iterable[str], List[Dict]]:
+    def stream_answer(self, question: str) -> Tuple[Iterable[Dict[str, str]], List[Dict]]:
         docs = self.retrieve(question)
         context, citations = self.build_context_and_citations(docs)
-        
+
         messages = self._build_messages(question, context, num_sources=len(citations))
         stream = self.chat_model.stream(messages)
-        
+
         def cleaned_stream():
             full_text = ""
             for token in stream:
                 full_text += token
-                yield token
-            
-            cleaned = self._clean_answer(full_text)
-            if cleaned != full_text:
-                diff = len(full_text) - len(cleaned)
-                if diff > 0:
-                    pass
-        
+                yield {"type": "token", "data": token}
+
+            cleaned = self._clean_answer(full_text) or full_text
+            yield {"type": "final", "data": cleaned}
+
         return cleaned_stream(), citations

@@ -49,6 +49,14 @@ function App() {
             last.citations = citations;
             return newMsgs;
           });
+        },
+        (finalText) => {
+          setMessages((prev) => {
+            const newMsgs = [...prev];
+            const last = newMsgs[newMsgs.length - 1];
+            last.content = finalText;
+            return newMsgs;
+          });
         }
       );
     } catch (e) {
