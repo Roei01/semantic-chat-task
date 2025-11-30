@@ -17,7 +17,8 @@ export async function chat(
   modelType: "ollama" | "openai",
   modelName: string | undefined,
   onToken: (token: string) => void,
-  onCitations: (citations: Citation[]) => void
+  onCitations: (citations: Citation[]) => void,
+  onFinal?: (content: string) => void
 ) {
   const response = await fetch("http://localhost:8005/chat", {
     method: "POST",
@@ -52,6 +53,8 @@ export async function chat(
           onCitations(json.data);
         } else if (json.type === "token") {
           onToken(json.data);
+        } else if (json.type === "final" && onFinal) {
+          onFinal(json.data);
         }
       } catch (e) {
         console.error("Error parsing line", line, e);
