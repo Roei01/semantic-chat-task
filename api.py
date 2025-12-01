@@ -35,22 +35,25 @@ async def chat_endpoint(req: ChatRequest):
                 model = OpenAIChatModel(model_name=req.model_name or "gpt-4o-mini")
             except RuntimeError as e:
                 raise HTTPException(
-                    status_code=500, 
+                    status_code=500,
                     detail=f"OpenAI API key not configured: {str(e)}. Please set API_GPT or OPENAI_API_KEY environment variable."
                 )
         else:
             model = OllamaChatModel(model_name=req.model_name or "llama3")
-            
+
         service = LegalRAGService(chat_model=model)
-        stream, citations = service.stream_answer(req.question)
-        
+
+        # ⬅️ במקום stream_answer – משתמשים ב-answer (עם ניקוי)
+        answer, citations = service.answer(req.question)
+
         async def generator():
-            yield json.dumps({"type": "citations", "data": citations}) + "\n"
-            for token in stream:
-                yield json.dumps({"type": "token", "data": token}) + "\n"
-                
+            # קודם שולחים ציטוטים
+            yield json.dumps({"type": "citations", "data": citations}, ensure_ascii=False) + "\n"
+            # ואז את כל התשובה כמקטע אחד – אחרי _clean_answer
+            yield json.dumps({"type": "token", "data": answer}, ensure_ascii=False) + "\n"
+
         return StreamingResponse(generator(), media_type="application/x-ndjson")
-        
+
     except HTTPException:
         raise
     except Exception as e:
