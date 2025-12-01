@@ -26,7 +26,11 @@ function App() {
     setInput("");
     setLoading(true);
 
-    const botMsg: Message = { role: "assistant", content: "" };
+    const botMsg: Message = {
+      role: "assistant",
+      content: "",
+      modelName: modelType,
+    };
     setMessages((prev) => [...prev, botMsg]);
 
     try {
@@ -171,7 +175,15 @@ function App() {
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center mt-1">
                     <Bot size={18} />
                   </div>
-                  <div className="flex-1 text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  <div className="flex-1 text-blue-800 leading-relaxed whitespace-pre-wrap">
+                    {interaction.bot.modelName && (
+                      <div className="text-xs text-blue-400 mb-2">
+                        מודל:{" "}
+                        {interaction.bot.modelName === "ollama"
+                          ? "Llama 3 (מקומי)"
+                          : "GPT-4 (ענן)"}
+                      </div>
+                    )}
                     {interaction.bot.content}
 
                     {interaction.bot.citations &&
