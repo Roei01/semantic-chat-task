@@ -2,6 +2,7 @@ export type Message = {
   role: "user" | "assistant";
   content: string;
   citations?: Citation[];
+  modelName?: string;
 };
 
 export type Citation = {
