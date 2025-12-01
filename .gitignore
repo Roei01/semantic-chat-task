@@ -1,2 +1,18 @@
-/frontend/node_modules
 .env
+
+
+# macOS junk
+.DS_Store
+._*
+
+# Vite cache
+frontend/.vite/
+
+# Node
+frontend/node_modules/
+
+# Python
+__pycache__/
+*.pyc
+vectorstore/chroma.sqlite3
+vectorstore/chroma.sqlite3
