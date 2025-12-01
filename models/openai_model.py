@@ -1,15 +1,17 @@
 import os
 from typing import Iterable, List
 from openai import OpenAI
+from dotenv import load_dotenv
 from .base import ChatModel, Message
 
+load_dotenv()
+
 class OpenAIChatModel(ChatModel):
-    def __init__(self, model_name: str = "gpt-4o-mini"):
+    def __init__(self, model_name: str = "gpt-4o"):
         api_key = os.getenv("API_GPT") or os.getenv("OPENAI_API_KEY")
-            
         if not api_key:
-            raise RuntimeError("API_GPT or OPENAI_API_KEY not set. Please set one of them in your environment: export API_GPT='your-key-here'")
-            
+            raise RuntimeError("Missing API key. Set API_GPT in your .env file.")
+
         self.client = OpenAI(api_key=api_key)
         self.model_name = model_name
 
