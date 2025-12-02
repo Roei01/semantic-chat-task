@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict, Iterable, Tuple
+from typing import List, Dict, Iterable, Tuple, Optional
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
@@ -7,23 +7,57 @@ from models.base import ChatModel, Message
 
 VECTOR_DB_DIR = Path("vectorstore")
 
+_GLOBAL_EMBEDDINGS: Optional[HuggingFaceEmbeddings] = None
+_GLOBAL_VECTORDB: Optional[Chroma] = None
+_GLOBAL_RETRIEVER = None
+
+
+def initialize_vectorstore(top_k: int = 100):
+    """
+    Initialize the global vectorstore once.
+
+    This function is safe to call multiple times – subsequent calls will be
+    no-ops once the globals are set.
+    """
+    global _GLOBAL_EMBEDDINGS, _GLOBAL_VECTORDB, _GLOBAL_RETRIEVER
+
+    if _GLOBAL_RETRIEVER is not None:
+        return _GLOBAL_RETRIEVER
+
+    if not VECTOR_DB_DIR.exists():
+        raise FileNotFoundError(f"Vector DB not found at {VECTOR_DB_DIR}")
+
+    _GLOBAL_EMBEDDINGS = HuggingFaceEmbeddings(
+        model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    )
+
+    _GLOBAL_VECTORDB = Chroma(
+        embedding_function=_GLOBAL_EMBEDDINGS,
+        persist_directory=str(VECTOR_DB_DIR),
+        collection_name="verdicts",
+    )
+
+    _GLOBAL_RETRIEVER = _GLOBAL_VECTORDB.as_retriever(search_kwargs={"k": top_k})
+    return _GLOBAL_RETRIEVER
+
+
+def get_retriever(top_k: int = 100):
+    """
+    Return a cached retriever, initializing the vectorstore once if needed.
+
+    This is used both by the FastAPI app (via initialize_vectorstore on startup)
+    and by direct usages of LegalRAGService in tests/CLI.
+    """
+    global _GLOBAL_RETRIEVER
+    if _GLOBAL_RETRIEVER is None:
+        initialize_vectorstore(top_k=top_k)
+    return _GLOBAL_RETRIEVER
+
 
 class LegalRAGService:
     def __init__(self, chat_model: ChatModel, top_k: int = 100):
-        if not VECTOR_DB_DIR.exists():
-            raise FileNotFoundError(f"Vector DB not found at {VECTOR_DB_DIR}")
-
-        embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
-        )
-
-        vectordb = Chroma(
-            embedding_function=embeddings,
-            persist_directory=str(VECTOR_DB_DIR),
-            collection_name="verdicts",
-        )
-
-        self.retriever = vectordb.as_retriever(search_kwargs={"k": top_k})
+        # Use cached retriever instead of re-creating the vectorstore
+        self.retriever = get_retriever(top_k=top_k)
         self.chat_model = chat_model
 
     def _is_general_question(self, question: str) -> bool:

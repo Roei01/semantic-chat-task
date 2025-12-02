@@ -8,7 +8,7 @@ import json
 
 from models.ollama_model import OllamaChatModel
 from models.openai_model import OpenAIChatModel
-from rag_service import LegalRAGService
+from rag_service import LegalRAGService, initialize_vectorstore
 
 app = FastAPI()
 
@@ -21,6 +21,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+async def startup_event():
+    initialize_vectorstore(top_k=100)
 
 class ChatRequest(BaseModel):
     question: str
