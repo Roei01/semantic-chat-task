@@ -20,7 +20,7 @@ export async function chat(
   onToken: (token: string) => void,
   onCitations: (citations: Citation[]) => void
 ) {
-  const response = await fetch("http://localhost:8005/chat", {
+  const response = await fetch("http://localhost:8002/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

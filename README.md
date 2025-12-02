@@ -76,7 +76,7 @@ You need to run the backend and frontend in separate terminals.
 **Backend (FastAPI):**
 
 ```bash
-python3 -m uvicorn api:app --port 8005 --reload
+python3 -m uvicorn api:app --port 8002 --reload
 ```
 
 **Frontend (React):**

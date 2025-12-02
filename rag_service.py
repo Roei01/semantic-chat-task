@@ -128,7 +128,7 @@ class LegalRAGService:
             if source_path:
                 file_path = Path(source_path)
                 if file_path.exists():
-                    file_url = f"http://localhost:8005/api/files/{file_path.name}"
+                    file_url = f"http://localhost:8002/api/files/{file_path.name}"
 
             metadata_str = ""
             if "moddate" in doc.metadata:
