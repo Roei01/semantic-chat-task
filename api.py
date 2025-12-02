@@ -49,13 +49,13 @@ async def chat_endpoint(req: ChatRequest):
         service = LegalRAGService(chat_model=model)
 
         # ⬅️ במקום stream_answer – משתמשים ב-answer (עם ניקוי)
-        answer, citations = service.answer(req.question)
+        stream, citations = service.stream_answer(req.question)
 
-        async def generator():
-            # קודם שולחים ציטוטים
+        def generator():
             yield json.dumps({"type": "citations", "data": citations}, ensure_ascii=False) + "\n"
-            # ואז את כל התשובה כמקטע אחד – אחרי _clean_answer
-            yield json.dumps({"type": "token", "data": answer}, ensure_ascii=False) + "\n"
+            for token in stream:
+                yield json.dumps({"type": "token", "data": token}, ensure_ascii=False) + "\n"
+
 
         return StreamingResponse(generator(), media_type="application/x-ndjson")
 
